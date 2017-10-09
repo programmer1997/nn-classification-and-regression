@@ -169,11 +169,16 @@ for fold in range(no_folds):
         b_o = theano.shared(np.random.randn()*.01, floatX)
         w_h1 = theano.shared(np.random.randn(no_features, no_hidden1)*.01, floatX )
         b_h1 = theano.shared(np.random.randn(no_hidden1)*0.01, floatX)
-        '''
+        
         set_weights(w_o,no_hidden1,1)
         set_weights(w_h1,8,no_hidden1)
         set_bias(b_o)
         set_bias(b_h1,no_hidden1)
+        '''
+        w_o.set_value(np.random.randn(no_hidden1)*.01, floatX )
+        w_h1.set_value(np.random.randn(no_features,no_hidden1)*.01, floatX )
+        b_h1.set_value(np.random.randn(no_hidden1)*0.01, floatX)
+        b_o.set_value(np.random.randn()*.01, floatX)
         
         for iter in range(epochs):
             if iter%100:
