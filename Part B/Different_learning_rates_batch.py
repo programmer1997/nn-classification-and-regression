@@ -13,6 +13,7 @@ epochs = 1000
 batch_size = 32
 no_hidden1 = 30 #num of neurons in hidden layer 1
 learning_rates =[1e-3,0.5*1e-3,1e-4,0.5*1e-4,1e-5]
+
 no_folds=5
 
 floatX = theano.config.floatX
@@ -191,18 +192,25 @@ for fold in range(no_folds):
             for start, end in zip(range(0, len(train_x), 32), range(32, len(train_x), 32)):
                batch_cost[start//32] = train(train_x[start:end],np.transpose(train_y[start:end]))
             train_cost[iter]=np.mean(batch_cost)
-            pred,validation_cost[iter],test_accuracy[iter]=test(validation_x,np.transpose(validation_y))
+            #pred,validation_cost[iter],test_accuracy[iter]=test(validation_x,np.transpose(validation_y))
+        pred,test_cost,test_accuracy=test(testX[0:30,:],np.transpose(testY[0:30]))
+        plt.figure(3)
+        plt.plot(range(testY[0:30].shape[0]),testY[0:30],"+",color="black")
+        plt.plot(range(testY[0:30].shape[0]),pred,"+",color="red")
+        plt.savefig('TEST----'+str(fold)+str(learning_rate*1000)+'.jpg')
+        
         plt.figure(1)
-        plt.plot(range(epochs),train_cost)
+        fig1,=plt.plot(range(epochs),train_cost,label="learning_rate")
         plt.xlabel("epoch")
         plt.ylabel("train cost")
         plt.title('Training error')
         plt.figure(2)
-        plt.plot(range(epochs),validation_cost)
+        fig2,=plt.plot(range(epochs),validation_cost,label="learning_rate")
         plt.xlabel("epoch")
         plt.ylabel("validation cost")
         plt.title('validation error')
-        
+
+           
     plt.figure(1)
     plt.savefig('training_fold'+str(fold))
     plt.figure(2)
