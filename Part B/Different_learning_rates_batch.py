@@ -12,9 +12,9 @@ np.random.seed(10)
 epochs = 1000
 batch_size = 32
 no_hidden1 = 30 #num of neurons in hidden layer 1
-learning_rates =[1e-3,0.5*1e-3,1e-4,0.5*1e-4,1e-5]
+learning_rates =[1e-3,0.5*1e-3,1e-4,0.5*1e-4,1e-5] # Different learning rates to experiment 
 
-no_folds=5
+no_folds=5 
 
 floatX = theano.config.floatX
 
@@ -154,29 +154,7 @@ for fold in range(no_folds):
     for learning_rate in learning_rates:
         alpha.set_value(learning_rate)
         print(alpha.get_value())
-        '''
-        bias_and_weight()
-
-        
-        w_o = np.random.uniform(low=-np.sqrt(6. / (no_hidden1 + 1)),
-                                 high=np.sqrt(6. / (no_hidden1 + 1)),
-                                 size=(no_hidden1,1))
-        b_o = theano.shared(np.random.randn()*.01, floatX)
-        w_h1 = np.random.uniform(low=-np.sqrt(6. / (8+no_hidden1)),
-                                 high=np.sqrt(6. / (no_hidden1 + 8)),
-                                 size=(8,no_hidden1))
-        b_h1 = theano.shared(np.random.randn(no_hidden1)*0.01, floatX)
-        
-        w_o = theano.shared(np.random.randn(no_hidden1)*.01, floatX ) 
-        b_o = theano.shared(np.random.randn()*.01, floatX)
-        w_h1 = theano.shared(np.random.randn(no_features, no_hidden1)*.01, floatX )
-        b_h1 = theano.shared(np.random.randn(no_hidden1)*0.01, floatX)
-        
-        set_weights(w_o,no_hidden1,1)
-        set_weights(w_h1,8,no_hidden1)
-        set_bias(b_o)
-        set_bias(b_h1,no_hidden1)
-        '''
+        # reset weights and biases 
         w_o.set_value(np.random.randn(no_hidden1)*.01, floatX )
         w_h1.set_value(np.random.randn(no_features,no_hidden1)*.01, floatX )
         b_h1.set_value(np.random.randn(no_hidden1)*0.01, floatX)
@@ -189,15 +167,13 @@ for fold in range(no_folds):
             train_y = train_y[idd,:]
             no_batch=train_x.shape[0]//32
             batch_cost=np.empty((no_batch,1))
+            # batch training
             for start, end in zip(range(0, len(train_x), 32), range(32, len(train_x), 32)):
                batch_cost[start//32] = train(train_x[start:end],np.transpose(train_y[start:end]))
             train_cost[iter]=np.mean(batch_cost)
-            #pred,validation_cost[iter],test_accuracy[iter]=test(validation_x,np.transpose(validation_y))
-        pred,test_cost,test_accuracy=test(testX[0:30,:],np.transpose(testY[0:30]))
-        plt.figure(3)
-        plt.plot(range(testY[0:30].shape[0]),testY[0:30],"+",color="black")
-        plt.plot(range(testY[0:30].shape[0]),pred,"+",color="red")
-        plt.savefig('TEST----'+str(fold)+str(learning_rate*1000)+'.jpg')
+            pred,validation_cost[iter],test_accuracy[iter]=test(validation_x,np.transpose(validation_y))
+ 
+ 
         
         plt.figure(1)
         fig1,=plt.plot(range(epochs),train_cost,label="learning_rate")
@@ -212,56 +188,26 @@ for fold in range(no_folds):
 
            
     plt.figure(1)
+    plt.show()
     plt.savefig('training_fold'+str(fold))
     plt.figure(2)
+    plt.show()
     plt.savefig('validation_fold'+str(fold))
-'''
-alpha.set_value(learning_rate)
-print(alpha.get_value())
 
-t = time.time()
+
+#Train the neural network with the best again with the whole training set
+# Best training rate is alpha= 1e-5
+print("training the network again")
+
 for iter in range(epochs):
-    if iter % 100 == 0:
-        print(iter)
+    train(trainX,np.transpose(trainY))
+pred,validation_cost[iter],test_accuracy[iter]=test(testX,np.transpose(testY))
+
+
+plt.plot(range(testY.shape[0]),testY,"+",color="black")
+plt.plot(range(testY.shape[0]),pred,"+",color="red")
+plt.savefig("Different_Learning_rates.jpg")
+
+
     
-    trainX, trainY = shuffle_data(trainX, trainY)
-    train_cost[iter] = train(trainX, np.transpose(trainY))
-    pred, test_cost[iter], test_accuracy[iter] = test(testX, np.transpose(testY))
 
-    if test_cost[iter] < min_error:
-        best_iter = iter
-        min_error = test_cost[iter]
-        best_w_o = w_o.get_value()
-        best_w_h1 = w_h1.get_value()
-        best_b_o = b_o.get_value()
-        best_b_h1 = b_h1.get_value()
-
-#set weights and biases to values at which performance was best
-w_o.set_value(best_w_o)
-b_o.set_value(best_b_o)
-w_h1.set_value(best_w_h1)
-b_h1.set_value(best_b_h1)
-    
-best_pred, best_cost, best_accuracy = test(testX, np.transpose(testY))
-
-print('Minimum error: %.1f, Best accuracy %.1f, Number of Iterations: %d'%(best_cost, best_accuracy, best_iter))
-
-#Plots
-plt.figure()
-plt.plot(range(epochs), train_cost, label='train error')
-plt.plot(range(epochs), test_cost, label = 'test error')
-plt.xlabel('Time (s)')
-plt.ylabel('Mean Squared Error')
-plt.title('Training and Test Errors at Alpha = %.3f'%learning_rate)
-plt.legend()
-plt.savefig('p_1b_sample_mse.png')
-plt.show()
-
-plt.figure()
-plt.plot(range(epochs), test_accuracy)
-plt.xlabel('Epochs')
-plt.ylabel('Accuracy')
-plt.title('Test Accuracy')
-plt.savefig('p_1b_sample_accuracy.png')
-plt.show()
-'''
