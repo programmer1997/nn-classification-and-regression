@@ -12,7 +12,6 @@ np.random.seed(10)
 epochs = 1000
 batch_size = 32
 no_hidden1 = 30 #num of neurons in hidden layer 1
-no_hidden2=20  #num of neurons in hidden layer 2
 learning_rate =1e-4
 
 
@@ -70,13 +69,11 @@ no_samples = T.scalar('no_samples')
 # initialize the biases
 b_o=theano.shared(np.zeros(1),floatX)
 b_h1=theano.shared(np.zeros(no_hidden1),floatX)
-b_h2=theano.shared(np.zeros(no_hidden2),floatX)
 
 
 #initialize the weights
-w_o = theano.shared(np.random.randn(no_hidden2,1)*.01, floatX )
+w_o = theano.shared(np.random.randn(no_hidden1,1)*.01, floatX )
 w_h1 = theano.shared(np.random.randn(no_features,no_hidden1)*.01, floatX )
-w_h2 = theano.shared(np.random.randn(no_hidden1,no_hidden2)*.01, floatX )
 
 
 
@@ -87,15 +84,13 @@ alpha = theano.shared(learning_rate, floatX)
 
 #Define mathematical expression:
 h1_out = T.nnet.sigmoid(T.dot(x, w_h1) + b_h1)
-h2_out = T.nnet.sigmoid(T.dot(h1_out, w_h2) + b_h2)
-
-y = T.dot(h2_out, w_o) + b_o
+y = T.dot(h1_out, w_o) + b_o
 
 cost = T.abs_(T.mean(T.sqr(d - y)))
 accuracy = T.mean(d - y)
 
 #define gradients
-dw_o, db_o, dw_h1, db_h1,dw_h2, db_h2 = T.grad(cost, [w_o, b_o, w_h1, b_h1,w_h2, b_h2])
+dw_o, db_o, dw_h1, db_h1 = T.grad(cost, [w_o, b_o, w_h1, b_h1])
 
 
 #Compile train and test functions
@@ -105,9 +100,7 @@ train = theano.function(
         updates = [[w_o, w_o - alpha*dw_o],
                    [b_o, b_o - alpha*db_o],
                    [w_h1, w_h1 - alpha*dw_h1],
-                   [b_h1, b_h1 - alpha*db_h1],
-                   [w_h2, w_h2 - alpha*dw_h2],
-                   [b_h2, b_h2 - alpha*db_h2]],
+                   [b_h1, b_h1 - alpha*db_h1]],
         allow_input_downcast=True
         )
 
@@ -121,7 +114,7 @@ test = theano.function(
 train_cost = np.zeros(epochs)
 test_cost = np.zeros(epochs)
 test_accuracy = np.zeros(epochs)
-
+idd = range(len(trainX))
 
 min_error = 1e+15
 best_iter = 0
@@ -136,11 +129,21 @@ for iter in range(epochs):
         print(iter)
     
     trainX, trainY = shuffle_data(trainX, trainY)
-    train_cost[iter] = train(trainX,trainY)
-    pred, test_cost[iter], test_accuracy[iter] = test(testX,testY)
+    trainX = trainX[idd,:]
+    trainY = trainY[idd,:]
+    no_batch=trainX.shape[0]//32
+    
+    batch_cost=np.empty((no_batch,1))
+    for start, end in zip(range(0, len(trainX), 32), range(32, len(trainX), 32)):
+           batch_cost[start//32] = train(trainX[start:end],trainY[start:end])
+           pred, test_cost[iter], test_accuracy[iter] = test(testX[start:end],testY[start:end])
+    train_cost[iter]=np.mean(batch_cost)
+    y,test_cost[iter],test_accuracy[iter]=test(testX,testY)
+ 
+ 
 
     # This is to find out the best weights and biases
-    
+    '''
     if test_cost[iter] < min_error:
         best_iter = iter
         min_error = test_cost[iter]
@@ -159,7 +162,7 @@ b_h1.set_value(best_b_h1)
 best_pred, best_cost, best_accuracy = test(testX,testY)
 
 print('Minimum error: %.1f, Best accuracy %.1f, Number of Iterations: %d'%(best_cost, best_accuracy, best_iter))
-
+'''
 #Plots
 plt.figure()
 plt.plot(range(epochs), train_cost, label='train error')
@@ -168,14 +171,8 @@ plt.xlabel('Time (s)')
 plt.ylabel('Mean Squared Error')
 plt.title('Training and Test Errors at Alpha = %.3f'%learning_rate)
 plt.legend()
-plt.savefig('4a.png')
+plt.savefig('3a.png')
 plt.show()
 
-plt.figure()
-plt.plot(range(epochs), test_accuracy)
-plt.xlabel('Epochs')
-plt.ylabel('Accuracy')
-plt.title('Test Accuracy')
-plt.savefig('4b.png')
-plt.show()
+
 
