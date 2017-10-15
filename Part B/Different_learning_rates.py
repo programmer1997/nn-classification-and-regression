@@ -19,9 +19,7 @@ no_folds=5
 floatX = theano.config.floatX
 
 # scale and normalize input data
-def scale(X, X_min, X_max):
-    return (X - X_min)/(X_max - X_min)
- 
+
 def normalize(X, X_mean, X_std):
     return (X - X_mean)/X_std
 
