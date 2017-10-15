@@ -15,13 +15,13 @@ no_hidden1 = 30 #num of neurons in hidden layer 1
 no_hidden2=20  #num of neurons in hidden layer 2
 no_hidden3=20  #num of neurons in hidden layer 3
 learning_rate =1e-4
+no_folds=5
 
 
 floatX = theano.config.floatX
 
 # scale and normalize input data
-def scale(X, X_min, X_max):
-    return (X - X_min)/(X_max - X_min)
+
  
 def normalize(X, X_mean, X_std):
     return (X - X_mean)/X_std
@@ -46,11 +46,7 @@ testX, testY = X_data[:m],Y_data[:m]
 trainX, trainY = X_data[m:], Y_data[m:]
 
 # scale and normalize data
-trainX_max, trainX_min =  np.max(trainX, axis=0), np.min(trainX, axis=0)
-testX_max, testX_min =  np.max(testX, axis=0), np.min(testX, axis=0)
 
-trainX = scale(trainX, trainX_min, trainX_max)
-testX = scale(testX, testX_min, testX_max)
 
 trainX_mean, trainX_std = np.mean(trainX, axis=0), np.std(trainX, axis=0)
 testX_mean, testX_std = np.mean(testX, axis=0), np.std(testX, axis=0)
@@ -93,7 +89,7 @@ h3_out = T.nnet.sigmoid(T.dot(h2_out, w_h3) + b_h3)
 y = T.dot(h3_out, w_o) + b_o
 
 cost = T.abs_(T.mean(T.sqr(d - y)))
-accuracy = T.mean(d - y)
+accuracy =T.mean(np.abs(d - y))
 
 #define gradients
 dw_o, db_o, dw_h1, db_h1,dw_h2, db_h2,dw_h3, db_h3 = T.grad(cost, [w_o, b_o, w_h1, b_h1,w_h2, b_h2,w_h3, b_h3])
@@ -124,6 +120,8 @@ test = theano.function(
 train_cost = np.zeros(epochs)
 test_cost = np.zeros(epochs)
 test_accuracy = np.zeros(epochs)
+validation_cost = np.zeros(epochs)
+validation_accuracy = np.zeros(epochs)
 
 
 min_error = 1e+15
@@ -132,15 +130,17 @@ best_w_o = np.zeros(no_hidden1)
 best_w_h1 = np.zeros([no_features, no_hidden1])
 best_b_o = 0
 best_b_h1 = np.zeros(no_hidden1)
+trainX, trainY = shuffle_data(trainX, trainY)
 
 
 for iter in range(epochs):
     if iter % 100 == 0:
         print(iter)
     
-    trainX, trainY = shuffle_data(trainX, trainY)
+
     train_cost[iter] = train(trainX,trainY)
     pred, test_cost[iter], test_accuracy[iter] = test(testX,testY)
+    
 
     # This is to find out the best weights and biases
     
@@ -169,7 +169,7 @@ plt.plot(range(epochs), train_cost, label='train error')
 plt.plot(range(epochs), test_cost, label = 'test error')
 plt.xlabel('Time (s)')
 plt.ylabel('Mean Squared Error')
-plt.title('Training and Test Errors at Alpha = %.3f'%learning_rate)
+plt.title('Training and validation Errors')
 plt.legend()
 plt.savefig('5a.png')
 plt.show()
@@ -177,8 +177,10 @@ plt.show()
 plt.figure()
 plt.plot(range(epochs), test_accuracy)
 plt.xlabel('Epochs')
-plt.ylabel('Accuracy')
-plt.title('Test Accuracy')
+plt.ylabel('Error')
+plt.title('Error')
 plt.savefig('5b.png')
 plt.show()
+
+
 
