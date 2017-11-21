@@ -178,6 +178,7 @@ for batch_size in batch_sizes:
     plt.figure(2)
     plt.plot(range(no_of_epochs), test_accuracy, label=str(batch_size))
 
+print('Training Error', str(training_costs))
 plt.figure(1)
 plt.xlabel('No. of Iterations')
 plt.ylabel('Training Error')
@@ -185,6 +186,7 @@ plt.title('Training Error vs Iterations for different Batch Sizes')
 plt.legend(title='Batch Sizes')
 plt.savefig('q2a_training_error_vs_iterations.png')
 
+print('Test accuracy', str(test_accuracy))
 plt.figure(2)
 plt.xlabel('No. of Iterations')
 plt.ylabel('Accuracy')

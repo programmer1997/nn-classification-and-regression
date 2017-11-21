@@ -204,6 +204,7 @@ plt.xlabel('No. of Iterations')
 plt.ylabel('Training Error')
 plt.title('Zoomed Training Error vs Iterations for different decay parameters')
 plt.legend(title='Decay Parameter')
+set_xlim(left=975)
 plt.xticks(range(980, 1001, 5))
 plt.savefig('q4a_training_error_vs_iterations_zoomed.png')
 

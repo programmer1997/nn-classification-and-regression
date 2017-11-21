@@ -6,7 +6,6 @@ import time
 import datetime
 import logging
 
-logging.basicConfig(filename='nn_q3a.log', level=logging.DEBUG)
 
 DECAY_PARAM = 1e-6
 LEARNING_RATE = 0.01
@@ -106,11 +105,11 @@ x = T.matrix() # Input matrix
 y = T.matrix() # Output
 
 # Initial weights and biases from the input layer to the hidden layer
-w1 = init_weights(no_of_input_nodes, no_of_hidden_layer_neurons)
-b1 = init_bias(no_of_hidden_layer_neurons) 
+w1 = init_weights(no_of_input_nodes, no_of_hidden_layer_neurons.get_value())
+b1 = init_bias(no_of_hidden_layer_neurons.get_value()) 
 
 # Initial weights and biases from the hidden layer to the output layer
-w2 = init_weights(no_of_hidden_layer_neurons, no_of_output_neurons, is_logistic=False)
+w2 = init_weights(no_of_hidden_layer_neurons.get_value(), no_of_output_neurons, is_logistic=False)
 b2 = init_bias(no_of_output_neurons)
 
 # Given that the hidden layer has a logistic activation function and
@@ -145,12 +144,15 @@ for no_hidden_neurons in no_hidden_neurons_test:
     running_time_total = float(0.0)
 
     # Set the weights and biases to initial values
-    w1.set_value(get_initial_weights(no_of_input_nodes, no_of_hidden_layer_neurons))
-    b1.set_value(np.zeros(no_of_hidden_layer_neurons), theano.config.floatX)
-    w2.set_value(get_initial_weights(no_of_hidden_layer_neurons, no_of_output_neurons, is_logistic=False))
+    w1.set_value(get_initial_weights(no_of_input_nodes, no_of_hidden_layer_neurons.get_value()))
+    b1.set_value(np.zeros(no_of_hidden_layer_neurons.get_value()), theano.config.floatX)
+    w2.set_value(get_initial_weights(no_of_hidden_layer_neurons.get_value(), no_of_output_neurons, is_logistic=False))
     b2.set_value(np.zeros(no_of_output_neurons), theano.config.floatX)
 
     for x in range(no_of_epochs):
+
+        #print('hidden neurons {}, epoch {}'.format(str(no_of_hidden_layer_neurons.get_value()), str(x)))
+
         # Shuffle train_x (inputs) and train_y (desired outputs) correspondingly
         train_x, train_y = shuffle_data(train_x, train_y)
         training_cost = 0.0
@@ -165,8 +167,7 @@ for no_hidden_neurons in no_hidden_neurons_test:
 
         # Calculate the average training cost for each epoch
         training_costs = np.append(training_costs, training_cost/(no_input_patterns // batch_size))
-        print('hidden neurons {}, epoch {}'.format(str(no_of_hidden_layer_neurons.get_value()), str(x)))
-     
+         
         # Calculate the mean test accuracy for each epoch
         test_accuracy = np.append(test_accuracy, np.mean(np.argmax(test_y, axis=1) == predict(test_x)))
 
@@ -181,6 +182,9 @@ for no_hidden_neurons in no_hidden_neurons_test:
 
     plt.figure(2)
     plt.plot(range(no_of_epochs), test_accuracy, label=str(no_of_hidden_layer_neurons.get_value()))
+
+    print(str(test_accuracy[-1]))
+    print(str(training_costs[-1]))
 
 plt.figure(1)
 plt.xlabel('No. of Iterations')
@@ -206,4 +210,4 @@ plt.savefig('q3c_time_to_update_vs_no_of_hidden_neurons.png')
 
 
 logging.debug('Mean times to update for different number of hidden neurons:')
-logging.debug(str(zip(no_hidden_neurons_test, times_to_update)))
+logging.debug(str(times_to_update))
